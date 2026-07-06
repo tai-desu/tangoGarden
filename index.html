@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>言葉の庭</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="phone">
+
+  <!-- ============ GARDEN (HOME) ============ -->
+  <div class="screen active" id="gardenScreen">
+    <div class="garden-top">
+      <div>
+        <div class="garden-title">言葉の庭</div>
+        <div class="garden-sub" id="gardenSub">—</div>
+      </div>
+      <div class="garden-top-right">
+        <button class="weather-badge" id="weatherBadge" aria-label="東京の天気">—</button>
+        <button class="sound-toggle" id="soundToggle" aria-label="音の切り替え">音</button>
+      </div>
+    </div>
+
+    <div class="garden-frame">
+      <svg id="gardenSvg" viewBox="0 0 340 210" role="img" aria-label="言葉の庭"></svg>
+    </div>
+
+    <div class="plant-info" id="plantInfo">花をタップすると、その言葉が見えます</div>
+
+    <div class="stage-legend" id="stageLegend"></div>
+
+    <div class="bed-row" id="bedRow"></div>
+
+    <div class="garden-actions">
+      <button class="water-btn" id="waterBtn">
+        <span class="water-btn-title" id="waterBtnTitle">水やりをする</span>
+        <span class="water-btn-sub" id="waterBtnSub">—</span>
+      </button>
+      <div class="garden-links">
+        <button class="garden-link" id="goPlayBtn">あそぶ<span class="garden-link-sub">ぜんぶミックス</span></button>
+        <button class="garden-link" id="goAddBtn">種をまく<span class="garden-link-sub">新しい単語</span></button>
+        <button class="garden-link" id="goListBtn">庭の記録<span class="garden-link-sub">単語帳</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ WATERING (STUDY) ============ -->
+  <div class="screen" id="flashcardScreen">
+    <div class="screen-header">
+      <button class="back-btn" data-go="gardenScreen"><span class="arrow">←</span>庭へ</button>
+      <span class="screen-header-title" id="studyModeTitle">水やり</span>
+    </div>
+
+    <div class="topbar">
+      <div class="topbar-row">
+        <span class="session-label" id="sessionLabel">きょうの水やり</span>
+        <span class="session-count" id="sessionCount">0 / 0</span>
+      </div>
+      <svg class="vine" id="vineSvg" viewBox="0 0 340 26" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="card-stage" id="cardStage"></div>
+
+    <div class="dock" id="ratingDock" style="display:none;">
+      <div class="dock-label">思い出せましたか？</div>
+      <div class="ratings ratings-4">
+        <button class="rate-btn" data-rating="again">
+          <svg viewBox="0 0 24 24" class="rate-symbol sym-amber"><path d="M12 4 C12 4 6 11 6 15 a6 6 0 0 0 12 0 C18 11 12 4 12 4 Z"/></svg>
+          <span class="rate-label">もう一度</span>
+        </button>
+        <button class="rate-btn" data-rating="hard">
+          <svg viewBox="0 0 24 24" class="rate-symbol"><path d="M12 20 V9"/><path d="M12 13 Q6 11 5 5 Q11 6 12 12"/></svg>
+          <span class="rate-label">難しい</span>
+        </button>
+        <button class="rate-btn" data-rating="good">
+          <svg viewBox="0 0 24 24" class="rate-symbol"><path d="M12 20 V8"/><path d="M12 12 Q6 10 5 4 Q11 5 12 11"/><path d="M12 14 Q18 12 19 6 Q13 7 12 13"/></svg>
+          <span class="rate-label">覚えた</span>
+        </button>
+        <button class="rate-btn" data-rating="easy">
+          <svg viewBox="0 0 24 24" class="rate-symbol"><circle cx="12" cy="11" r="3"/><ellipse cx="12" cy="5.5" rx="2" ry="3"/><ellipse cx="17.5" cy="9" rx="2" ry="3" transform="rotate(72 17.5 9)"/><ellipse cx="15.5" cy="15.5" rx="2" ry="3" transform="rotate(144 15.5 15.5)"/><ellipse cx="8.5" cy="15.5" rx="2" ry="3" transform="rotate(-144 8.5 15.5)"/><ellipse cx="6.5" cy="9" rx="2" ry="3" transform="rotate(-72 6.5 9)"/></svg>
+          <span class="rate-label">簡単</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="dock" id="practiceDock" style="display:none;">
+      <div class="dock-label">庭あるき（練習）— 記録されません</div>
+      <div class="ratings ratings-2">
+        <button class="rate-btn" data-rating="again">
+          <svg viewBox="0 0 24 24" class="rate-symbol sym-amber"><path d="M12 4 C12 4 6 11 6 15 a6 6 0 0 0 12 0 C18 11 12 4 12 4 Z"/></svg>
+          <span class="rate-label">まだ</span>
+        </button>
+        <button class="rate-btn" data-rating="good">
+          <svg viewBox="0 0 24 24" class="rate-symbol"><path d="M12 20 V8"/><path d="M12 12 Q6 10 5 4 Q11 5 12 11"/><path d="M12 14 Q18 12 19 6 Q13 7 12 13"/></svg>
+          <span class="rate-label">わかった</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SOW (ADD WORD) ============ -->
+  <div class="screen" id="addScreen">
+    <div class="screen-header">
+      <button class="back-btn" data-go="gardenScreen"><span class="arrow">←</span>庭へ</button>
+      <span class="screen-header-title">種をまく</span>
+    </div>
+
+    <div class="add-body">
+      <div class="add-title">新しい種をまく</div>
+      <div class="add-subtitle">単語を入力すると、読み方を自動で取得します。<br>ひらがな・カタカナだけの単語は検索なしで保存できます。</div>
+
+      <div class="input-group">
+        <label class="input-label" for="wordInput">単語</label>
+        <input type="text" class="word-input" id="wordInput" placeholder="例：曖昧" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="lookup-btn" id="lookupBtn">読み方を検索</button>
+      </div>
+
+      <div class="lookup-status" id="lookupStatus"></div>
+
+      <div class="lookup-result" id="lookupResult">
+        <div class="lookup-result-row">
+          <div>
+            <div class="lookup-result-word" id="resultWord">—</div>
+            <div class="lookup-result-reading" id="resultReading">—</div>
+          </div>
+          <span class="lookup-pos-pill" id="resultPos">—</span>
+        </div>
+        <div class="alt-readings" id="altReadings"></div>
+      </div>
+
+      <div class="manual-entry" id="manualEntry">
+        <label class="input-label" for="manualReadingInput">読み方（手動で入力）</label>
+        <input type="text" class="word-input manual-input" id="manualReadingInput" placeholder="ひらがなで入力" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+
+      <div class="input-group tag-group">
+        <label class="input-label" for="tagInput">花壇（タグ・「、」区切りで複数）</label>
+        <input type="text" class="word-input tag-input" id="tagInput" placeholder="例：建築" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="tag-suggest" id="tagSuggest"></div>
+      </div>
+
+      <button class="save-btn" id="saveBtn" disabled>この種をまく</button>
+      <div class="saved-toast" id="savedToast"></div>
+
+      <div class="recent-adds">
+        <div class="recent-label">最近まいた種</div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GARDEN RECORD (WORD LIST) ============ -->
+  <div class="screen" id="listScreen">
+    <div class="screen-header">
+      <button class="back-btn" data-go="gardenScreen"><span class="arrow">←</span>庭へ</button>
+      <span class="screen-header-title">庭の記録</span>
+    </div>
+
+    <div class="list-body">
+      <div class="insight-block" id="insightBlock"></div>
+      <div class="tag-filter" id="tagFilter"></div>
+      <div class="list-controls">
+        <div class="list-summary" id="listSummary">—</div>
+        <div class="sort-toggle" id="sortToggle">
+          <button class="sort-btn active" data-sort="recent">新しい順</button>
+          <button class="sort-btn" data-sort="weak">水やり順</button>
+        </div>
+      </div>
+      <div class="word-list" id="wordList"></div>
+
+      <div class="backup-block">
+        <div class="backup-title">バックアップと同期</div>
+        <div class="backup-sub">iPhoneのSafariは、7日ほど開かないと保存データを消すことがあります。バックアップをおすすめします。</div>
+        <div class="backup-row">
+          <button class="backup-btn" id="exportBtn">ファイルに保存</button>
+          <button class="backup-btn" id="importBtn">ファイルから復元</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+        <div class="sync-area">
+          <label class="input-label" for="tokenInput">GitHub同期（自動バックアップ）</label>
+          <input type="password" class="word-input sync-input" id="tokenInput" placeholder="ghp_ で始まるトークン" autocomplete="off">
+          <button class="backup-btn sync-btn" id="syncBtn">保存して今すぐ同期</button>
+          <div class="sync-status" id="syncStatus"></div>
+          <div class="sync-hint">github.com/settings/tokens で「gist」だけにチェックしたトークンを作成してください。データはあなただけの非公開Gistに保存され、開くたびに自動で同期します。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="dict.js"></script>
+<script src="storage.js"></script>
+<script src="jisho.js"></script>
+<script src="srs.js"></script>
+<script src="weather.js"></script>
+<script src="sync.js"></script>
+<script src="sound.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
