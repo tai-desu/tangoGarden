@@ -42,4 +42,4 @@ file backups.
 - Dictionary data from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html)
   © EDRDG, used under CC BY-SA 4.0 (via the jamdict-data package).
 - Online lookup fallback: jisho.org unofficial API.
-- Weather: [Open-Meteo](https://open-meteo.com/) free API.
+- Weather: [Open-Meteo](https://open-meteo.com/) free API .
