@@ -18,10 +18,11 @@
         <div class="garden-sub" id="gardenSub">—</div>
       </div>
       <div class="garden-top-right">
-        <button class="weather-badge" id="weatherBadge" aria-label="東京の天気">—</button>
         <button class="sound-toggle" id="soundToggle" aria-label="音の切り替え">音</button>
       </div>
     </div>
+
+    <div class="garden-quote" id="gardenQuote">—</div>
 
     <div class="garden-frame">
       <svg id="gardenSvg" viewBox="0 0 340 210" role="img" aria-label="言葉の庭"></svg>
@@ -133,6 +134,11 @@
       <div class="manual-entry" id="manualEntry">
         <label class="input-label" for="manualReadingInput">読み方（手動で入力）</label>
         <input type="text" class="word-input manual-input" id="manualReadingInput" placeholder="ひらがなで入力" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+
+      <div class="input-group example-group">
+        <label class="input-label" for="exampleInput">例文（任意）</label>
+        <input type="text" class="word-input example-input" id="exampleInput" placeholder="例：弟に八つ当たりしてしまった" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       </div>
 
       <div class="input-group tag-group">

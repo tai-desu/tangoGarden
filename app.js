@@ -92,13 +92,33 @@ function greetingNow() {
   return g;
 }
 
+// 15 gentle daily encouragements — one per day, looping
+const DAILY_QUOTES = [
+  '小さな一歩が、遠くまで連れていってくれます',
+  '昨日の自分より、一語だけ前へ',
+  '焦らなくていい。芽は静かに育ちます',
+  '続けることが、いちばんの才能です',
+  '忘れても大丈夫。思い出すたびに根が深くなります',
+  '今日の五分が、未来のあなたの言葉になります',
+  '雨の日も、庭は育っています',
+  '覚えられない日は、種をまく日です',
+  'ことばは、育てた分だけ味方になります',
+  'ゆっくりでも、止まらなければ庭は茂ります',
+  '一輪咲けば、庭はもう庭です',
+  '苦手な言葉ほど、咲いたときが嬉しい',
+  '毎日でなくても、戻ってくれば続いています',
+  '今日のあなたに、ちょうどいい分だけ',
+  '水をやった分、必ずどこかで根づいています'
+];
+
 function renderHome() {
   const d = new Date();
-  const words = wordsInBed(homeBed);
-  const vib = gardenVibrance(words);
   document.getElementById('gardenSub').textContent =
-    `${d.getMonth() + 1}月${d.getDate()}日 · ${greetingNow()}、タイさん` +
-    (words.length ? ` · 元気度 ${vib}%` : '');
+    `${d.getMonth() + 1}月${d.getDate()}日 · ${greetingNow()}、タイさん`;
+
+  const dayIndex = Math.floor(d.getTime() / 86400000);
+  document.getElementById('gardenQuote').textContent =
+    DAILY_QUOTES[dayIndex % DAILY_QUOTES.length];
 
   renderBedRow();
   renderWaterButton();
@@ -106,40 +126,17 @@ function renderHome() {
   renderGarden();
   resetPlantInfo();
 
-  renderWeatherBadge(currentWeather, !weatherLoaded);
+  // weather stays invisible UI-wise — it just paints the garden
   fetchTokyoWeather().then(kind => {
     weatherLoaded = true;
     if (kind !== currentWeather) {
       currentWeather = kind;
       renderGarden();
     }
-    renderWeatherBadge(kind, false);
   });
 }
 
-document.getElementById('weatherBadge').addEventListener('click', async () => {
-  softTap();
-  renderWeatherBadge(currentWeather, true);
-  currentWeather = await fetchTokyoWeather(true);
-  weatherLoaded = true;
-  renderWeatherBadge(currentWeather, false);
-  renderGarden();
-});
-
-const WEATHER_ICON = {
-  sunny:  '<circle cx="12" cy="12" r="4.5"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/>',
-  cloudy: '<path d="M6 16 a4 4 0 1 1 1.5-7.7 A5 5 0 0 1 17 9.5 A3.5 3.5 0 0 1 16.5 16 Z"/>',
-  rain:   '<path d="M6 13 a4 4 0 1 1 1.5-7.7 A5 5 0 0 1 17 6.5 A3.5 3.5 0 0 1 16.5 13 Z"/><path d="M8 16l-1.2 3M12 16l-1.2 3M16 16l-1.2 3"/>',
-  snow:   '<path d="M6 13 a4 4 0 1 1 1.5-7.7 A5 5 0 0 1 17 6.5 A3.5 3.5 0 0 1 16.5 13 Z"/><path d="M8 17h.01M12 19h.01M15.5 16.5h.01M10 21h.01" stroke-width="2.4"/>',
-  wind:   '<path d="M3 9 h11 a2.6 2.6 0 1 0 -2.6 -2.6M3 14 h15 a2.6 2.6 0 1 1 -2.6 2.6M3 19 h8"/>'
-};
-
-function renderWeatherBadge(kind, loading) {
-  const el = document.getElementById('weatherBadge');
-  el.innerHTML = loading
-    ? '<span style="font-size:11px;">東京 …</span>'
-    : `<svg viewBox="0 0 24 24">${WEATHER_ICON[kind]}</svg><span>東京・${WEATHER_LABEL[kind]}</span>`;
-}
+const WEATHER_ICON_REMOVED = true; // weather badge removed — garden visuals only
 
 function renderBedRow() {
   const row = document.getElementById('bedRow');
@@ -231,21 +228,51 @@ function renderGarden() {
 
   if (words.length === 0) {
     inner += `
-      <g stroke="#1D5C4D" fill="none" stroke-width="1.6" stroke-linecap="round">
+      <g stroke="#1D5C4D" fill="none" stroke-width="1.1" stroke-linecap="round">
         <line x1="164" y1="${GROUND_Y}" x2="164" y2="${GROUND_Y - 18}"/>
         <path d="M164 ${GROUND_Y - 10} Q156 ${GROUND_Y - 14} 154 ${GROUND_Y - 21}"/>
       </g>
       <text x="170" y="${GROUND_Y - 26}" font-size="12" fill="#4E7A66" text-anchor="middle" font-family="Zen Kaku Gothic New">まだ種がありません</text>`;
   } else {
-    // deterministic, stable arrangement
-    const arranged = words.slice().sort((a, b) => hashStr(a.id) - hashStr(b.id));
-    const n = arranged.length;
-    const showLabels = n <= 6;
-    arranged.forEach((w, i) => {
-      const jitter = (hashStr(w.id) % 11) - 5;
-      const x = Math.round(26 + (288 * (i + 0.5)) / n + jitter);
-      gardenPlantMap[w.id] = w;
-      inner += plantSvg(w, x, showLabels);
+    // ---- group plants into 花壇 zones along the ground ----
+    const bedOf = w => (w.tags && w.tags.length) ? w.tags[0] : '';
+    const tagOrder = getAllTags().map(t => t.tag);
+    const groups = [];
+    const byBed = {};
+    words.forEach(w => {
+      const b = bedOf(w);
+      if (!byBed[b]) { byBed[b] = []; groups.push(b); }
+      byBed[b].push(w);
+    });
+    groups.sort((a, b) => {
+      const ia = a === '' ? 999 : tagOrder.indexOf(a);
+      const ib = b === '' ? 999 : tagOrder.indexOf(b);
+      return ia - ib;
+    });
+
+    const X0 = 22, X1 = 318, usable = X1 - X0;
+    const n = words.length;
+    const showZones = !homeBed && groups.length > 1; // zone labels only for the mixed view
+    let cursor = X0;
+
+    groups.forEach((bed, gi) => {
+      const members = byBed[bed].slice().sort((a, b) => hashStr(a.id) - hashStr(b.id));
+      const segW = usable * (members.length / n);
+      members.forEach((w, i) => {
+        const jitter = (hashStr(w.id) % 9) - 4;
+        const x = Math.round(cursor + (segW * (i + 0.5)) / members.length + jitter);
+        gardenPlantMap[w.id] = w;
+        inner += plantSvg(w, Math.min(X1 - 4, Math.max(X0 + 4, x)));
+      });
+      if (showZones) {
+        const cx = (cursor + segW / 2).toFixed(0);
+        const label = bed === '' ? 'その他' : bed;
+        inner += `<text x="${cx}" y="${GROUND_Y + 18}" font-size="11" fill="#4E7A66" text-anchor="middle" font-family="Zen Kaku Gothic New">${escapeHtml(label)}</text>`;
+        if (gi > 0) {
+          inner += `<line x1="${cursor.toFixed(0)}" y1="${GROUND_Y + 4}" x2="${cursor.toFixed(0)}" y2="${GROUND_Y + 14}" stroke="#B7D2C0" stroke-width="1.1" stroke-linecap="round"/>`;
+        }
+      }
+      cursor += segW;
     });
   }
 
@@ -293,7 +320,7 @@ function flowerHead(type, x, cy) {
   return out;
 }
 
-function plantSvg(w, x, showLabel) {
+function plantSvg(w, x) {
   const stage = growthStage(w);
   const h = hashStr(w.id + w.word);
   const g = GROUND_Y;
@@ -342,12 +369,8 @@ function plantSvg(w, x, showLabel) {
   const drop = (isThirsty(w) && stage !== 'wilt')
     ? `<path d="M${x + 12} ${topY - 2} c0 0 -3.6 4.6 -3.6 7 a3.6 3.6 0 0 0 7.2 0 c0 -2.4 -3.6 -7 -3.6 -7 Z" stroke="#C08A3E" fill="none" stroke-width="1.1"/>`
     : '';
-  const label = showLabel
-    ? `<text x="${x}" y="${g + 18}" font-size="11" fill="${stage === 'wilt' ? '#8F6425' : '#4E7A66'}" text-anchor="middle" font-family="Zen Kaku Gothic New">${escapeHtml(w.word)}</text>`
-    : '';
-
   return `<g class="plant" data-id="${w.id}" ${swayStyle}>
-    <g stroke="${color}" fill="none" stroke-width="1.1">${body}</g>${drop}</g>${label}`;
+    <g stroke="${color}" fill="none" stroke-width="1.1">${body}</g>${drop}</g>`;
 }
 
 function plantSway(stage, h) {
@@ -658,13 +681,24 @@ function renderCurrentCard() {
     </div>
     <div class="flashcard" id="flashcard">
       <span class="fc-stage-glyph">${stageGlyph(growthStage(word))}</span>
-      <div class="fc-reading">${escapeHtml(word.reading)}</div>
+      <div class="fc-reveal fc-reading-row">
+        <span class="fc-reading">${escapeHtml(word.reading)}</span>
+        <button class="fc-speak" id="fcSpeak" aria-label="読み上げ">
+          <svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L13 19V5L7.5 9.5H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+        </button>
+      </div>
       <div class="fc-word">${escapeHtml(word.word)}</div>
+      ${word.example ? `<div class="fc-reveal fc-example">${escapeHtml(word.example)}</div>` : ''}
       <div class="fc-hint">タップして読み方を表示</div>
     </div>
   `;
 
   document.getElementById('flashcard').addEventListener('click', revealCurrentCard);
+  document.getElementById('fcSpeak').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!session || !session.revealed) return;
+    speakWord(word.reading);
+  });
   renderVine();
 }
 
@@ -678,6 +712,9 @@ function revealCurrentCard() {
     ? document.getElementById('practiceDock')
     : document.getElementById('ratingDock');
   dock.style.display = 'block';
+
+  const word = session.queue[session.index];
+  if (word) speakWord(word.reading); // hear it the moment you see it
 }
 
 function rateCurrentCard(rating) {
@@ -868,9 +905,10 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   if (!reading) return;
 
   const tags = parseTags(document.getElementById('tagInput').value);
+  const example = document.getElementById('exampleInput').value.trim();
 
   softTap();
-  addWord({ word, reading, partOfSpeech, tags });
+  addWord({ word, reading, partOfSpeech, tags, example });
 
   const toast = document.getElementById('savedToast');
   toast.textContent = `種をまきました — ${word}（${reading}）`;
@@ -880,6 +918,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   document.getElementById('lookupResult').classList.remove('show');
   document.getElementById('manualEntry').classList.remove('show');
   document.getElementById('manualReadingInput').value = '';
+  document.getElementById('exampleInput').value = '';
   // keep the bed (tag) — sowing several seeds in the same bed is common
   currentLookupResult = null;
   updateSaveButtonState();
@@ -1018,6 +1057,8 @@ function renderWordList() {
         <input type="text" class="word-input edit-input" data-field="word" value="${escapeAttr(w.word)}">
         <label class="input-label">読み方</label>
         <input type="text" class="word-input edit-input" data-field="reading" value="${escapeAttr(w.reading)}">
+        <label class="input-label">例文（任意）</label>
+        <input type="text" class="word-input edit-input edit-example" data-field="example" value="${escapeAttr(w.example || '')}" placeholder="例文があると練習が深まります">
         <label class="input-label">花壇（「、」区切り）</label>
         <input type="text" class="word-input edit-input" data-field="tags" value="${escapeAttr((w.tags || []).join('、'))}" placeholder="例：建築">
         <div class="edit-meta">植えた日 ${escapeHtml(w.dateAdded)} · 水やり ${w.appearances}回 · 正解率 ${acc} · 次回 ${dueLabel(w)}</div>
@@ -1049,9 +1090,10 @@ document.getElementById('wordList').addEventListener('click', e => {
     const word = item.querySelector('[data-field="word"]').value.trim();
     const reading = item.querySelector('[data-field="reading"]').value.trim();
     const tags = parseTags(item.querySelector('[data-field="tags"]').value);
+    const example = item.querySelector('[data-field="example"]').value;
     if (!word || !reading) return;
     softTap();
-    updateWord(id, { word, reading, tags });
+    updateWord(id, { word, reading, tags, example });
     renderWordList();
     return;
   }

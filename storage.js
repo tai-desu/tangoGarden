@@ -13,7 +13,10 @@ function loadData() {
     if (!raw) return { words: [], lastUpdated: null };
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed.words)) return { words: [], lastUpdated: null };
-    parsed.words.forEach(w => { if (!Array.isArray(w.tags)) w.tags = []; });
+    parsed.words.forEach(w => {
+      if (!Array.isArray(w.tags)) w.tags = [];
+      if (typeof w.example !== 'string') w.example = '';
+    });
     return parsed;
   } catch (e) {
     console.error('storage: failed to load, starting fresh', e);
@@ -37,7 +40,7 @@ function makeId() {
   return 'w_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
 }
 
-function addWord({ word, reading, partOfSpeech, tags }) {
+function addWord({ word, reading, partOfSpeech, tags, example }) {
   const data = loadData();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -47,6 +50,7 @@ function addWord({ word, reading, partOfSpeech, tags }) {
     reading,
     partOfSpeech: partOfSpeech || '—',
     tags: Array.isArray(tags) ? tags : [],
+    example: typeof example === 'string' ? example.trim() : '',
     dateAdded: today,
     appearances: 0,
     correct: 0,
@@ -71,6 +75,7 @@ function updateWord(id, fields) {
   if (typeof fields.reading === 'string' && fields.reading.trim()) w.reading = fields.reading.trim();
   if (typeof fields.partOfSpeech === 'string') w.partOfSpeech = fields.partOfSpeech;
   if (Array.isArray(fields.tags)) w.tags = fields.tags;
+  if (typeof fields.example === 'string') w.example = fields.example.trim();
   saveData(data);
   return w;
 }

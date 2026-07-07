@@ -55,3 +55,36 @@ function toggleSound() {
   }
   if (soundOn) softTap();
 }
+
+// ---------------- read-aloud (Web Speech API) ----------------
+// Uses the on-device Japanese voice (Kyoko on iOS) — free, offline.
+// We always speak the kana reading, never the kanji, so multi-reading
+// kanji can't be mispronounced. Respects the 音/静 toggle.
+
+let jaVoice = null;
+
+function pickJaVoice() {
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+  } catch (e) { /* ignore */ }
+}
+
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  pickJaVoice();
+  try { window.speechSynthesis.addEventListener('voiceschanged', pickJaVoice); } catch (e) { /* ignore */ }
+}
+
+function speakWord(text) {
+  if (!soundOn || !text) return;
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel(); // don't queue up taps
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = 0.9;   // a touch slower — this is a learning app
+    u.volume = 0.9;
+    window.speechSynthesis.speak(u);
+  } catch (e) { /* no voice available — stay silent */ }
+}
